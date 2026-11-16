@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #eef1f8;
+  --surface: #ffffff;
+  --ink: #1b2140;
+  --muted: #6b7394;
+  --line: #e1e5f0;
+  --accent: #4f46e5;
+  --accent-soft: #e8e7fd;
+  --done: #10b981;
+  --high: #e5484d;
+  --med: #f59e0b;
+  --low: #3b82f6;
+  --shadow: 0 1px 2px rgba(27,33,64,.05), 0 12px 32px -12px rgba(27,33,64,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1226;
+    --surface: #181c36;
+    --ink: #eef0fb;
+    --muted: #9097bb;
+    --line: #272c4d;
+    --accent: #818cf8;
+    --accent-soft: #252a57;
+    --shadow: 0 12px 32px -12px rgba(0,0,0,.6);
+  }
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  font-family: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 48px 16px;
+  line-height: 1.5;
+}
+.app { max-width: 640px; margin: 0 auto; }
+header { margin-bottom: 24px; }
+h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -.04em; line-height: 1.1; }
+.date { color: var(--muted); font-weight: 500; margin-top: 4px; }
+
+.progress { margin-top: 20px; }
+.progress-meta { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+
+.card { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); }
+.add { padding: 14px; display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; margin-bottom: 20px; }
+input[type="text"], input[type="date"], select {
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1.5px solid transparent; border-radius: 12px; padding: 12px 14px; min-width: 0;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.btn {
+  font: inherit; font-weight: 700; cursor: pointer; border: 0; border-radius: 12px;
+  padding: 12px 20px; background: var(--accent); color: #fff; transition: transform .1s, filter .15s;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: scale(.97); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 4px; background: var(--surface); padding: 4px; border-radius: 12px; box-shadow: var(--shadow); }
+.tab { font: inherit; font-weight: 600; font-size: .9rem; border: 0; background: none; color: var(--muted); padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.link { font: inherit; font-size: .9rem; font-weight: 600; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 8px; }
+.link:hover { color: var(--high); }
+
+ul { list-style: none; padding: 0; display: grid; gap: 10px; }
+li.task { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-left: 4px solid var(--low); }
+li.task.high { border-left-color: var(--high); }
+li.task.medium { border-left-color: var(--med); }
+li.task.low { border-left-color: var(--low); }
+.check { appearance: none; flex: none; width: 24px; height: 24px; border: 2px solid var(--line); border-radius: 50%; cursor: pointer; display: grid; place-content: center; transition: .15s; background: var(--surface); }
+.check:hover { border-color: var(--accent); }
+.check:checked { background: var(--done); border-color: var(--done); }
+.check:checked::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px,-1px); }
+.body { flex: 1; min-width: 0; }
+.title { font-weight: 600; overflow-wrap: anywhere; cursor: text; }
+.done .title { text-decoration: line-through; color: var(--muted); }
+.meta { font-size: .8rem; color: var(--muted); font-weight: 500; margin-top: 2px; }
+.meta .overdue { color: var(--high); font-weight: 700; }
+.edit { width: 100%; padding: 8px 10px; }
+.icon { flex: none; background: none; border: 0; color: var(--muted); cursor: pointer; width: 34px; height: 34px; border-radius: 9px; font-size: 1.1rem; }
+.icon:hover { background: var(--bg); color: var(--high); }
+
+.empty { text-align: center; padding: 48px 16px; color: var(--muted); }
+.empty strong { display: block; color: var(--ink); font-size: 1.1rem; margin-bottom: 4px; }
+
+@media (max-width: 560px) {
+  h1 { font-size: 2.1rem; }
+  .add { grid-template-columns: 1fr 1fr; }
+  .add input[type="text"] { grid-column: 1 / -1; }
+  .add .btn { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>Today's tasks</h1>
+    <p class="date" id="date"></p>
+    <div class="progress">
+      <div class="progress-meta"><span id="progressText">No tasks yet</span><span id="progressPct">0%</span></div>
+      <div class="bar" role="progressbar" aria-label="Completed tasks" aria-valuemin="0" aria-valuemax="100" id="bar"><i id="fill"></i></div>
+    </div>
+  </header>
+
+  <form class="card add" id="form" autocomplete="off">
+    <input type="text" id="text" placeholder="What needs to get done?" aria-label="Task name" maxlength="200" required>
+    <input type="date" id="due" aria-label="Due date">
+    <select id="priority" aria-label="Priority">
+      <option value="low">Low</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+    </select>
+    <button class="btn" type="submit">Add task</button>
+  </form>
+
+  <div class="toolbar">
+    <div class="tabs" role="group" aria-label="Filter tasks">
+      <button class="tab" data-filter="all" aria-pressed="true">All</button>
+      <button class="tab" data-filter="active" aria-pressed="false">Active</button>
+      <button class="tab" data-filter="done" aria-pressed="false">Done</button>
+    </div>
+    <button class="link" id="clear">Clear completed</button>
+  </div>
+
+  <ul id="list" aria-live="polite"></ul>
+</main>
+
+<script>
+(() => {
+  const KEY = "tasks.v1";
+  const $ = (id) => document.getElementById(id);
+  const list = $("list"), form = $("form");
+  let filter = "all";
+  let tasks = load();
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch {}
+  }
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function fmtDue(d) {
+    const dt = new Date(d + "T00:00:00");
+    return dt.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  function render() {
+    const shown = tasks.filter(t => filter === "all" || (filter === "done") === t.done);
+    list.innerHTML = "";
+
+    if (!shown.length) {
+      const li = document.createElement("li");
+      li.className = "card empty";
+      li.innerHTML = tasks.length
+        ? "<strong>Nothing here</strong>Try a different filter."
+        : "<strong>You're all clear</strong>Add your first task above.";
+      list.appendChild(li);
+    }
+
+    shown.forEach(t => {
+      const li = document.createElement("li");
+      li.className = `card task ${t.priority}${t.done ? " done" : ""}`;
+      li.dataset.id = t.id;
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.className = "check"; cb.checked = t.done;
+      cb.setAttribute("aria-label", `Mark "${t.text}" as ${t.done ? "active" : "done"}`);
+      cb.addEventListener("change", () => { t.done = cb.checked; save(); render(); });
+
+      const body = document.createElement("div");
+      body.className = "body";
+      const title = document.createElement("div");
+      title.className = "title"; title.textContent = t.text; title.title = "Double-click to edit";
+      title.addEventListener("dblclick", () => startEdit(t, body, title));
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const overdue = t.due && !t.done && t.due < today();
+      meta.innerHTML = `${t.priority[0].toUpperCase() + t.priority.slice(1)} priority` +
+        (t.due ? ` · <span class="${overdue ? "overdue" : ""}">${overdue ? "Overdue, " : "Due "}${fmtDue(t.due)}</span>` : "");
+      body.append(title, meta);
+
+      const del = document.createElement("button");
+      del.className = "icon"; del.innerHTML = "&times;";
+      del.setAttribute("aria-label", `Delete "${t.text}"`);
+      del.addEventListener("click", () => { tasks = tasks.filter(x => x.id !== t.id); save(); render(); });
+
+      li.append(cb, body, del);
+      list.appendChild(li);
+    });
+
+    const done = tasks.filter(t => t.done).length;
+    const pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+    $("progressText").textContent = tasks.length ? `${done} of ${tasks.length} completed` : "No tasks yet";
+    $("progressPct").textContent = pct + "%";
+    $("fill").style.width = pct + "%";
+    $("bar").setAttribute("aria-valuenow", pct);
+    $("clear").hidden = !done;
+  }
+
+  function startEdit(t, body, title) {
+    const input = document.createElement("input");
+    input.type = "text"; input.className = "edit"; input.value = t.text; input.maxLength = 200;
+    input.setAttribute("aria-label", "Edit task name");
+    body.replaceChild(input, title);
+    input.focus(); input.select();
+    let finished = false;
+    const finish = (commit) => {
+      if (finished) return; finished = true;
+      const v = input.value.trim();
+      if (commit && v) { t.text = v; save(); }
+      render();
+    };
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") finish(true);
+      if (e.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", () => finish(true));
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const text = $("text").value.trim();
+    if (!text) return;
+    tasks.unshift({ id: uid(), text, due: $("due").value, priority: $("priority").value, done: false });
+    save(); form.reset(); $("priority").value = "medium"; $("text").focus(); render();
+  });
+
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  }));
+
+  $("clear").addEventListener("click", () => { tasks = tasks.filter(t => !t.done); save(); render(); });
+
+  $("date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  render();
+})();
+</script>
+</body>
+</html>
